@@ -13,6 +13,8 @@ class WashMonitorViewModel : ViewModel() {
     val logMessages: LiveData<List<String>> = _logMessages
     private val log = mutableListOf<String>()
 
+    private val _accelText = MutableLiveData<String>("")
+    val accelText: LiveData<String> = _accelText
 
     private var phoneNumbers: List<String> = emptyList()
 
@@ -45,6 +47,10 @@ class WashMonitorViewModel : ViewModel() {
         val entry = "[$timestamp] $message"
         log.add(entry)
         _logMessages.postValue(log) // Use postValue to update from background thread
+    }
+
+    fun accelText(message: String) {
+        _accelText.postValue(message)
     }
 
     private fun parsePhoneNumbers(numbers: String): List<String> {

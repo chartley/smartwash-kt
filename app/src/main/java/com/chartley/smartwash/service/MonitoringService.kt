@@ -53,9 +53,9 @@ class MonitoringService : Service(), SensorEventListener {
         accelerometer?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
             lastMovementTime = System.currentTimeMillis()
-            viewModel?.logMessage("Accelerometer monitoring started.")
+            viewModel?.logMessage("Accelerometer started.")
         } ?: run {
-            viewModel?.logMessage("Accelerometer sensor not available.")
+            viewModel?.logMessage("Accelerometer not available.")
         }
     }
 
@@ -67,6 +67,8 @@ class MonitoringService : Service(), SensorEventListener {
             val z = event.values[2]
 
             val accelMagnitude = sqrt(x * x + y * y + z * z) - 9.8f // Subtract gravity
+
+            viewModel?.accelText("accelMagnitude $accelMagnitude")
 
             if (accelMagnitude > threshold) {
                 lastMovementTime = System.currentTimeMillis()

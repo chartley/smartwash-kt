@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var startStopButton: Button
     private lateinit var phoneNumbersEditText: EditText
     private lateinit var logTextView: TextView
+    private lateinit var accelTextView: TextView
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity() {
         phoneNumbersEditText = findViewById(R.id.phoneNumbersEditText)
         logTextView = findViewById(R.id.logTextView)
         logTextView.movementMethod = ScrollingMovementMethod()
+        accelTextView = findViewById(R.id.accelTextView)
 
         viewModel.isMonitoring.observe(this, Observer { isMonitoring ->
             startStopButton.text = if (isMonitoring) "Monitoring..." else "Start Wash Monitor"
@@ -58,6 +60,10 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.logMessages.observe(this, Observer { logs ->
             logTextView.text = logs.joinToString("\n")
+        })
+
+        viewModel.accelText.observe(this, Observer { text ->
+            accelTextView.text = text
         })
 
         startStopButton.setOnClickListener {
