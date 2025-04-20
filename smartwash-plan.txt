@@ -1,0 +1,190 @@
+==== REQUIREMENTS ====
+
+the architecture / components for an Android app that lets me know when my washing machine has finished, which I will then turn into code with Android Studio. The app will
+- have a button to "start wash monitor"; it switches text to "monitoring..." and can be pressed to stop monitoring
+- monitor vibrations via accelerometer; when vibrations are not present for 60 seconds, wash is done
+- input box for phone numbers to text when wash is done, new line or comma separated
+- send a text via Twilio to each phone number saying the wash is done
+- button resets to "start wash monitor"
+- a scrolling text area with a running debug log of activity with timestamps (start monitoring, acceleration start / stopped, wash complete, texts sent per number)
+
+
+
+==== ARCHITECTURE ====
+
+Here's a clear architecture outline, including recommended components, interactions, and responsibilities, which will make your implementation straightforward in Android Studio:
+
+## High-Level Architecture
+Your app will follow a simplified MVVM-like structure, with clear separation of UI, sensors, SMS handling, and logging:
+
+```
+UI Layer (Activity/Fragment)
+       |
+       |  user interaction
+       v
+ViewModel
+       |
+       v
+MonitoringService  ---> Accelerometer Sensor (SensorManager)
+       |
+       v
+TwilioSMSHandler
+       |
+       v
+Debug Logger (in-memory log buffer with timestamps)
+```
+
+---
+
+## Components and Responsibilities
+
+### 1. **UI Layer (Activity or Fragment)**
+
+- **MainActivity**: Provides UI controls:
+  - Button to start/stop monitoring (`start wash monitor` ↔ `monitoring...`)
+  - EditText to enter phone numbers (comma/newline separated)
+  - TextView or RecyclerView to display scrolling debug logs
+
+**Interactions:**
+- Sends commands to `ViewModel`
+- Observes status/log updates via LiveData from `ViewModel`
+
+---
+
+### 2. **ViewModel (`WashMonitorViewModel`)**
+
+- Manages UI state (`isMonitoring`)
+- Parses and stores phone numbers
+- Handles interaction logic between UI and Service
+
+**Interactions:**
+- Receives commands from Activity
+- Starts/stops `MonitoringService`
+- Updates Activity via LiveData:
+  - Monitoring status (for button text)
+  - Logs
+
+---
+
+### 3. **Foreground Service (`MonitoringService`)**
+
+- Runs independently from UI lifecycle
+- Keeps app running even in background to reliably monitor sensor data
+- Accesses accelerometer data continuously
+
+**Core Logic:**
+- When started:
+  - Register accelerometer sensor listener (via `SensorManager`)
+  - Detect acceleration data
+  - Tracks time since last vibration
+- Logic for wash done:
+  - If accelerations above certain threshold detected, reset timer
+  - If 60 seconds pass without vibrations, triggers wash completion flow
+
+**Interactions:**
+- Uses callback/interface to inform `ViewModel` of events (monitoring start, acceleration start/stop, wash complete)
+- Calls `TwilioSMSHandler` upon wash completion
+
+---
+
+### 4. **Sensor Management (Accelerometer)**
+
+- Utilize Android's `SensorManager` and `SensorEventListener`
+- Configure to listen specifically for acceleration magnitude
+- Determine threshold to distinguish between vibration and stillness (tune experimentally)
+
+Sample logic (pseudo-code):
+
+```kotlin
+fun onSensorChanged(event: SensorEvent) {
+    val accelMagnitude = sqrt(x*x + y*y + z*z)
+    if (accelMagnitude > THRESHOLD) {
+        lastMovementTime = currentTime
+        // notify movement start if needed
+    } else {
+        if (currentTime - lastMovementTime > 60_000) {
+            // no movement detected for 60 seconds
+            washDoneCallback.invoke()
+        }
+    }
+}
+```
+
+---
+
+### 5. **Twilio SMS Handler (`TwilioSMSHandler`)**
+
+- Encapsulates communication with Twilio API
+- Uses Retrofit (or direct HTTP client like OkHttp) to send SMS
+- Auth and credentials securely stored (ideally using Android Keystore or secured storage)
+
+Basic workflow:
+- Receives phone numbers from service/viewmodel
+- Sends SMS notifications to each number
+
+---
+
+### 6. **Debug Logger**
+
+- Simple data structure (e.g., LinkedList or ArrayList)
+- Maintains log entries with timestamps
+- Exposes log via LiveData for UI to observe
+- Example log entry: `[2025-04-20 10:45:21] Wash complete. SMS sent to: +1234567890`
+
+---
+
+## Recommended Libraries/Tools:
+
+| Functionality        | Recommended Libraries       |
+|----------------------|-----------------------------|
+| Networking           | Retrofit, OkHttp            |
+| JSON Parsing         | Gson, Moshi                 |
+| MVVM support         | Android Architecture Components (LiveData, ViewModel) |
+| Date/time formatting | `java.time` API             |
+| Secure storage       | Android Jetpack Security library (for Twilio credentials) |
+
+---
+
+## Minimal Class Structure:
+
+Here’s a suggested class organization:
+
+```
+com.example.washmonitor
+│
+├── MainActivity.kt (UI)
+├── viewmodel
+│   └── WashMonitorViewModel.kt
+├── service
+│   └── MonitoringService.kt
+├── sensors
+│   └── AccelerometerMonitor.kt
+├── sms
+│   └── TwilioSMSHandler.kt
+└── util
+    └── Logger.kt
+```
+
+---
+
+## Typical User Interaction Flow:
+
+1. User enters phone numbers.
+2. User taps button `"start wash monitor"`.
+3. Button text changes to `"monitoring..."`.
+4. Service registers accelerometer sensor and starts tracking vibrations.
+5. Log: `"Monitoring started at [time]"`.
+6. After wash completes (no vibration detected for 60 sec):
+   - TwilioSMSHandler sends notifications to numbers.
+   - Log: `"Wash complete. SMS sent to +1xxx..., +1yyy..."`.
+7. Button resets to `"start wash monitor"`.
+
+---
+
+## Tips:
+
+- Test accelerometer logic extensively to handle noisy data effectively.
+- Handle background service permissions properly (foreground notification required for Android 8+).
+- Securely store Twilio API secrets.
+
+This structured approach makes coding straightforward and maintainable, ensuring clarity and simplicity in your Android Studio project.
