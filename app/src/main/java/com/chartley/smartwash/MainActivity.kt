@@ -73,16 +73,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startMonitoringService() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.SEND_SMS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestSmsPermission()
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(Intent(this, MonitoringService::class.java))
+            MonitoringService.viewModel = viewModel
         } else {
             startService(Intent(this, MonitoringService::class.java))
         }
@@ -92,47 +85,9 @@ class MainActivity : AppCompatActivity() {
         stopService(Intent(this, MonitoringService::class.java))
     }
 
-    private fun requestSmsPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.SEND_SMS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.SEND_SMS)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                // You might show a dialog or a snackbar.  For simplicity, we'll just log.
-                logTextView.append("\n[${currentTime()}] SMS permission required to send notifications.")
-            }
-            requestPermissionLauncher.launch(Manifest.permission.SEND_SMS)
-        }
-    }
-
-
     private fun currentTime(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         return sdf.format(Date())
     }
 
 }
-
-
-//import android.os.Bundle
-//import androidx.activity.enableEdgeToEdge
-//import androidx.appcompat.app.AppCompatActivity
-//import androidx.core.view.ViewCompat
-//import androidx.core.view.WindowInsetsCompat
-//
-//class MainActivity : AppCompatActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
-//        setContentView(R.layout.activity_main)
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
-//    }
-//}
