@@ -9,6 +9,11 @@ import android.text.method.ScrollingMovementMethod
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.graphics.Color
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +33,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var startStopButton: Button
     private lateinit var phoneNumbersEditText: EditText
     private lateinit var logTextView: TextView
-    private lateinit var accelTextView: TextView
+    private lateinit var accelChart: LineChart
+    private lateinit var lineDataSet: LineDataSet
+    private var sampleIndex = 0f
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -52,7 +59,8 @@ class MainActivity : AppCompatActivity() {
         phoneNumbersEditText = findViewById(R.id.phoneNumbersEditText)
         logTextView = findViewById(R.id.logTextView)
         logTextView.movementMethod = ScrollingMovementMethod()
-        accelTextView = findViewById(R.id.accelTextView)
+        accelChart = findViewById(R.id.accelChart)
+        setupChart()
 
         viewModel.isMonitoring.observe(this, Observer { isMonitoring ->
             startStopButton.text = if (isMonitoring) "Monitoring..." else "Start Wash Monitor"
@@ -62,8 +70,8 @@ class MainActivity : AppCompatActivity() {
             logTextView.text = logs.joinToString("\n")
         })
 
-        viewModel.accelText.observe(this, Observer { text ->
-            accelTextView.text = text
+        viewModel.accelMagnitude.observe(this, Observer { value ->
+            addEntry(value)
         })
 
         startStopButton.setOnClickListener {
@@ -94,6 +102,29 @@ class MainActivity : AppCompatActivity() {
     private fun currentTime(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         return sdf.format(Date())
+    }
+
+    private fun setupChart() {
+        lineDataSet = LineDataSet(mutableListOf(), "accel")
+        lineDataSet.setDrawCircles(false)
+        lineDataSet.color = Color.BLUE
+        lineDataSet.lineWidth = 2f
+        val data = LineData(lineDataSet)
+        data.setDrawValues(false)
+        accelChart.data = data
+        accelChart.description.isEnabled = false
+        accelChart.setTouchEnabled(false)
+        accelChart.axisRight.isEnabled = false
+    }
+
+    private fun addEntry(value: Float) {
+        val data = accelChart.data ?: return
+        data.addEntry(Entry(sampleIndex, value), 0)
+        data.notifyDataChanged()
+        accelChart.notifyDataSetChanged()
+        accelChart.setVisibleXRangeMaximum(50f)
+        accelChart.moveViewToX(sampleIndex)
+        sampleIndex += 1f
     }
 
 }

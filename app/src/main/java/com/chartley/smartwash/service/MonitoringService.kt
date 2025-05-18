@@ -23,6 +23,7 @@ class MonitoringService : Service(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
     private var lastMovementTime: Long = 0
+    private var lastSampleTime: Long = 0
     private val threshold = 2f // Adjust this threshold based on your needs (experimentally)
     private val noMovementDuration = 60_000L // 60 seconds
     private var isWashDone = false
@@ -69,6 +70,11 @@ class MonitoringService : Service(), SensorEventListener {
             val accelMagnitude = sqrt(x * x + y * y + z * z) - 9.8f // Subtract gravity
 
             viewModel?.accelText("accelMagnitude $accelMagnitude")
+            val now = System.currentTimeMillis()
+            if (now - lastSampleTime >= 1000L) {
+                viewModel?.postAccelMagnitude(accelMagnitude)
+                lastSampleTime = now
+            }
 
             if (accelMagnitude > threshold) {
                 lastMovementTime = System.currentTimeMillis()
