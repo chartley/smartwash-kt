@@ -19,27 +19,27 @@ class WashMonitorViewModel : ViewModel() {
     private val _accelMagnitude = MutableLiveData<Float>()
     val accelMagnitude: LiveData<Float> = _accelMagnitude
 
-    private var phoneNumbers: List<String> = emptyList()
+    private var emailAddresses: List<String> = emptyList()
 
 
-    fun startMonitoring(phoneNumbersString: String) {
+    fun startMonitoring(emailAddressesString: String) {
         _isMonitoring.value = true
-        phoneNumbers = parsePhoneNumbers(phoneNumbersString)
+        emailAddresses = parseEmailAddresses(emailAddressesString)
         logMessage("Monitoring started.")
     }
 
     fun stopMonitoring() {
         _isMonitoring.value = false
         logMessage("Monitoring stopped.")
-        phoneNumbers = emptyList()
+        emailAddresses = emptyList()
     }
 
 
     fun onWashComplete() {
         _isMonitoring.postValue(false) // Use postValue for background thread
         logMessage("Wash complete.")
-        MonitoringService.twilioSMSHandler?.sendSms(phoneNumbers)
-        { number ->  logMessage("SMS sent to: $number") }
+        MonitoringService.brevoEmailHandler?.sendEmails(emailAddresses)
+        { addr ->  logMessage("Email sent to: $addr") }
     }
 
 
@@ -60,8 +60,8 @@ class WashMonitorViewModel : ViewModel() {
         _accelMagnitude.postValue(value)
     }
 
-    private fun parsePhoneNumbers(numbers: String): List<String> {
-        return numbers.replace("\n", ",").split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    private fun parseEmailAddresses(addresses: String): List<String> {
+        return addresses.replace("\n", ",").split(",").map { it.trim() }.filter { it.isNotEmpty() }
     }
 
 

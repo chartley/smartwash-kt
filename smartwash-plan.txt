@@ -3,8 +3,8 @@
 the architecture / components for an Android app that lets me know when my washing machine has finished, which I will then turn into code with Android Studio. The app will
 - have a button to "start wash monitor"; it switches text to "monitoring..." and can be pressed to stop monitoring
 - monitor vibrations via accelerometer; when vibrations are not present for 60 seconds, wash is done
-- input box for phone numbers to text when wash is done, new line or comma separated
-- send a text via Twilio to each phone number saying the wash is done
+- input box for email addresses to notify when wash is done, new line or comma separated
+- send an email via Brevo to each address saying the wash is done
 - button resets to "start wash monitor"
 - a scrolling text area with a running debug log of activity with timestamps (start monitoring, acceleration start / stopped, wash complete, texts sent per number)
 
@@ -28,7 +28,7 @@ ViewModel
 MonitoringService  ---> Accelerometer Sensor (SensorManager)
        |
        v
-TwilioSMSHandler
+BrevoEmailHandler
        |
        v
 Debug Logger (in-memory log buffer with timestamps)
@@ -42,7 +42,7 @@ Debug Logger (in-memory log buffer with timestamps)
 
 - **MainActivity**: Provides UI controls:
   - Button to start/stop monitoring (`start wash monitor` ↔ `monitoring...`)
-  - EditText to enter phone numbers (comma/newline separated)
+  - EditText to enter email addresses (comma/newline separated)
   - TextView or RecyclerView to display scrolling debug logs
 
 **Interactions:**
@@ -54,7 +54,7 @@ Debug Logger (in-memory log buffer with timestamps)
 ### 2. **ViewModel (`WashMonitorViewModel`)**
 
 - Manages UI state (`isMonitoring`)
-- Parses and stores phone numbers
+- Parses and stores email addresses
 - Handles interaction logic between UI and Service
 
 **Interactions:**
@@ -82,8 +82,8 @@ Debug Logger (in-memory log buffer with timestamps)
   - If 60 seconds pass without vibrations, triggers wash completion flow
 
 **Interactions:**
-- Uses callback/interface to inform `ViewModel` of events (monitoring start, acceleration start/stop, wash complete)
-- Calls `TwilioSMSHandler` upon wash completion
+ - Uses callback/interface to inform `ViewModel` of events (monitoring start, acceleration start/stop, wash complete)
+ - Calls `BrevoEmailHandler` upon wash completion
 
 ---
 
@@ -112,15 +112,15 @@ fun onSensorChanged(event: SensorEvent) {
 
 ---
 
-### 5. **Twilio SMS Handler (`TwilioSMSHandler`)**
+### 5. **Brevo Email Handler (`BrevoEmailHandler`)**
 
-- Encapsulates communication with Twilio API
-- Uses Retrofit (or direct HTTP client like OkHttp) to send SMS
+- Encapsulates communication with Brevo API
+- Uses Volley (or direct HTTP client like OkHttp) to send emails
 - Auth and credentials securely stored (ideally using Android Keystore or secured storage)
 
 Basic workflow:
-- Receives phone numbers from service/viewmodel
-- Sends SMS notifications to each number
+- Receives email addresses from service/viewmodel
+- Sends email notifications to each address
 
 ---
 
@@ -141,7 +141,7 @@ Basic workflow:
 | JSON Parsing         | Gson, Moshi                 |
 | MVVM support         | Android Architecture Components (LiveData, ViewModel) |
 | Date/time formatting | `java.time` API             |
-| Secure storage       | Android Jetpack Security library (for Twilio credentials) |
+| Secure storage       | Android Jetpack Security library (for Brevo credentials) |
 
 ---
 
@@ -159,8 +159,8 @@ com.example.washmonitor
 │   └── MonitoringService.kt
 ├── sensors
 │   └── AccelerometerMonitor.kt
-├── sms
-│   └── TwilioSMSHandler.kt
+├── email
+│   └── BrevoEmailHandler.kt
 └── util
     └── Logger.kt
 ```
@@ -169,14 +169,14 @@ com.example.washmonitor
 
 ## Typical User Interaction Flow:
 
-1. User enters phone numbers.
+1. User enters email addresses.
 2. User taps button `"start wash monitor"`.
 3. Button text changes to `"monitoring..."`.
 4. Service registers accelerometer sensor and starts tracking vibrations.
 5. Log: `"Monitoring started at [time]"`.
 6. After wash completes (no vibration detected for 60 sec):
-   - TwilioSMSHandler sends notifications to numbers.
-   - Log: `"Wash complete. SMS sent to +1xxx..., +1yyy..."`.
+   - BrevoEmailHandler sends notifications to addresses.
+   - Log: `"Wash complete. Email sent to alice@example.com, bob@example.com"`.
 7. Button resets to `"start wash monitor"`.
 
 ---
@@ -185,6 +185,6 @@ com.example.washmonitor
 
 - Test accelerometer logic extensively to handle noisy data effectively.
 - Handle background service permissions properly (foreground notification required for Android 8+).
-- Securely store Twilio API secrets.
+- Securely store Brevo API secrets.
 
 This structured approach makes coding straightforward and maintainable, ensuring clarity and simplicity in your Android Studio project.
