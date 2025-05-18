@@ -12,6 +12,8 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.formatter.ValueFormatter
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -98,6 +100,15 @@ class MainActivity : AppCompatActivity() {
         accelChart.description.isEnabled = false
         accelChart.setTouchEnabled(false)
         accelChart.axisRight.isEnabled = false
+
+        // Only show integer labels on the x-axis
+        val xAxis = accelChart.xAxis
+        xAxis.granularity = 1f
+        xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                return value.toInt().toString()
+            }
+        }
     }
 
     private fun addEntry(value: Float) {
