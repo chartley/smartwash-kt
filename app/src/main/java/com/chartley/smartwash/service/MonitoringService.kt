@@ -14,7 +14,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.chartley.smartwash.MainActivity
 import com.chartley.smartwash.R
-import com.chartley.smartwash.sms.TwilioSMSHandler
+import com.chartley.smartwash.email.BrevoEmailHandler
 import com.chartley.smartwash.viewmodel.WashMonitorViewModel
 import kotlin.math.sqrt
 
@@ -30,7 +30,7 @@ class MonitoringService : Service(), SensorEventListener {
 
     companion object {
         var viewModel: WashMonitorViewModel? = null
-        var twilioSMSHandler: TwilioSMSHandler? = null
+        var brevoEmailHandler: BrevoEmailHandler? = null
     }
 
 
@@ -41,7 +41,7 @@ class MonitoringService : Service(), SensorEventListener {
 
         createNotificationChannel()
         startForegroundNotification()
-        twilioSMSHandler = TwilioSMSHandler(this)
+        brevoEmailHandler = BrevoEmailHandler(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

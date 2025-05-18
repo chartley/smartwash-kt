@@ -16,10 +16,11 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/phoneNumbersEditText"
+            android:id="@+id/emailAddressesEditText"
             android:layout_width="match_parent"
             android:layout_height="91dp"
-            android:hint="phone numbers (one per line)" />
+            android:hint="email addresses (one per line)"
+            android:inputType="textEmailAddress|textMultiLine" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button

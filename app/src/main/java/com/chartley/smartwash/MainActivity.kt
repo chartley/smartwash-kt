@@ -1,8 +1,6 @@
 package com.chartley.smartwash
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
@@ -14,10 +12,8 @@ import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 // import androidx.lifecycle.observe
 import com.chartley.smartwash.service.MonitoringService
@@ -31,33 +27,19 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: WashMonitorViewModel by viewModels()
     private lateinit var startStopButton: Button
-    private lateinit var phoneNumbersEditText: EditText
+    private lateinit var emailAddressesEditText: EditText
     private lateinit var logTextView: TextView
     private lateinit var accelChart: LineChart
     private lateinit var lineDataSet: LineDataSet
     private var sampleIndex = 0f
     private val maxPoints = 30
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                // Permission granted. Start service if monitoring.
-                if (viewModel.isMonitoring.value == true) {
-                    startMonitoringService()
-                }
-            } else {
-                // Explain to the user that the feature is unavailable because the
-                // features requires a permission that the user has denied.
-                logTextView.append("\n[${currentTime()}] SMS permission denied.")
-            }
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         startStopButton = findViewById(R.id.startStopButton)
-        phoneNumbersEditText = findViewById(R.id.phoneNumbersEditText)
+        emailAddressesEditText = findViewById(R.id.emailAddressesEditText)
         logTextView = findViewById(R.id.logTextView)
         logTextView.movementMethod = ScrollingMovementMethod()
         accelChart = findViewById(R.id.accelChart)
@@ -80,8 +62,8 @@ class MainActivity : AppCompatActivity() {
                 viewModel.stopMonitoring()
                 stopMonitoringService()
             } else {
-                val phoneNumbers = phoneNumbersEditText.text.toString()
-                viewModel.startMonitoring(phoneNumbers)
+                val emails = emailAddressesEditText.text.toString()
+                viewModel.startMonitoring(emails)
                 startMonitoringService()
             }
         }
