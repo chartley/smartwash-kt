@@ -16,6 +16,9 @@ class WashMonitorViewModel : ViewModel() {
     private val _accelText = MutableLiveData<String>("")
     val accelText: LiveData<String> = _accelText
 
+    private val _accelMagnitude = MutableLiveData<Float>()
+    val accelMagnitude: LiveData<Float> = _accelMagnitude
+
     private var phoneNumbers: List<String> = emptyList()
 
 
@@ -51,6 +54,10 @@ class WashMonitorViewModel : ViewModel() {
 
     fun accelText(message: String) {
         _accelText.postValue(message)
+    }
+
+    fun postAccelMagnitude(value: Float) {
+        _accelMagnitude.postValue(value)
     }
 
     private fun parsePhoneNumbers(numbers: String): List<String> {
